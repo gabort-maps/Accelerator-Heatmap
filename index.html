@@ -1,9 +1,8 @@
 <!doctype html>
-<!-- GitHub Pages ready: upload this file as index.html to the repository root, then enable Pages. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Accelerator Ecosystem Intelligence Dashboard v4.5</title>
+<title>Accelerator Ecosystem Intelligence Dashboard v4.8</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 :root{
@@ -101,6 +100,24 @@ tr:hover td{background:#fbfdff}
 .profile-section p{margin:6px 0}
 .compact-note{font-size:12px;color:#66758c;line-height:1.35;margin:8px 0}
 .legend-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#66758c;font-weight:800;margin-right:2px}
+
+.portfolio-list{display:grid;gap:8px;margin-top:10px;max-height:300px;overflow:auto;padding-right:2px}
+.portfolio-item{border:1px solid var(--line);background:#fff;border-radius:13px;padding:10px 11px;cursor:pointer;transition:background .15s ease,border-color .15s ease,box-shadow .15s ease}
+.portfolio-item:hover{background:#fbfdff;border-color:#9fb3c8;box-shadow:0 4px 12px rgba(16,34,56,.06)}
+.portfolio-item.active{border-color:var(--teal);background:var(--softgreen);box-shadow:0 4px 14px rgba(16,34,56,.08)}
+.portfolio-name{font-weight:850;color:var(--navy);line-height:1.15}
+.portfolio-meta{font-size:12px;color:var(--muted);line-height:1.35;margin-top:4px}
+.portfolio-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.link-chip{display:inline-flex;align-items:center;border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:750;color:var(--navy)}
+.link-chip:hover{border-color:var(--teal);background:var(--softgreen)}
+.startup-profile-card{margin-top:12px;border:1px solid var(--line);background:linear-gradient(135deg,#ffffff,#f8fafc);border-radius:14px;padding:12px 13px}
+.startup-profile-card .startup-title{font-size:17px;font-weight:850;color:var(--navy);margin-bottom:6px}
+.startup-profile-card .startup-desc{font-size:13px;color:#304258;margin:8px 0 10px;line-height:1.42}
+.startup-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+.startup-mini-cell{border:1px solid var(--line);background:var(--panel2);border-radius:11px;padding:8px 9px}
+.startup-mini-cell .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:800}
+.startup-mini-cell .v{font-size:13px;color:var(--navy);font-weight:800;margin-top:2px}
+.portfolio-empty{border:1px dashed var(--line);background:var(--panel2);border-radius:13px;padding:12px;color:var(--muted);font-size:12px}
 
 .brief-hero{background:linear-gradient(135deg,#ffffff,#f6f9fd);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(16,34,56,.05)}
 .brief-hero h2{font-size:22px;margin:0 0 6px;color:var(--navy);letter-spacing:-.01em}
@@ -211,7 +228,7 @@ tr:hover td{background:#fbfdff}
     <section id="maturity" class="tab">
       <div class="grid two">
         <div class="card"><h2>Which startups need review or validation?</h2><p class="question"><strong>Use this tab to answer:</strong> which companies look early, unusually mature, or ready for manual review?</p><p class="small"><strong>How to read the map:</strong> right = older at acceleration, up = larger team, colour = review bucket. Click a dot to see the startup decision card.</p><div id="maturityLegend" class="legend"></div><svg id="maturitySvg" class="svgbox"></svg></div>
-        <div class="card"><h2>Selected startup decision card</h2><p class="compact-note">This card explains why the row is in a bucket and what the next human action should be.</p><div id="maturityDetail" class="detail-panel"></div><h3>Maturity distribution</h3><div id="maturityBars" class="bars"></div><h3 style="margin-top:16px">Founder background signal distribution</h3><p class="compact-note">This is a simple background signal count, not a founder-quality score.</p><div id="founderSignal" style="margin-top:8px"></div></div>
+        <div class="card"><h2>Selected startup decision + profile</h2><p class="compact-note">Click a dot to see why the row is in a bucket, what to do next, and the same compact startup profile used in the accelerator portfolio view.</p><div id="maturityDetail" class="detail-panel"></div><h3>Maturity distribution</h3><div id="maturityBars" class="bars"></div><h3 style="margin-top:16px">Founder background signal distribution</h3><p class="compact-note">This is a simple background signal count, not a founder-quality score.</p><div id="founderSignal" style="margin-top:8px"></div></div>
       </div>
       <div class="insight"><strong>Management read:</strong> outliers are not automatically better. Mature companies and very young large teams should be checked before outreach.</div>
     </section>
@@ -510,6 +527,7 @@ function renderOverview(rows, accs){
 }
 
 let selectedAccelProgram='';
+let selectedChannelStartup='';
 let selectedMaturityStartup='';
 function renderChannelSvg(accs){
  const svg=el('channelSvg'); const W=svg.clientWidth||700,H=430,p=56,midX=W/2,midY=H/2; svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
@@ -570,7 +588,7 @@ function renderChannelSvg(accs){
   circle.setAttribute('cx',pt.x); circle.setAttribute('cy',pt.y); circle.setAttribute('r',pt.r); circle.setAttribute('fill',colors[a.channel_quadrant]||'#94a3b8');
   circle.setAttribute('class','dot'+(selectedAccelProgram===a.program?' selected':''));
   circle.dataset.program=a.program;
-  circle.addEventListener('click',()=>{ selectedAccelProgram=a.program; renderProfile(a); renderChannelSvg(accs); });
+  circle.addEventListener('click',()=>{ selectedAccelProgram=a.program; selectedChannelStartup=''; renderProfile(a); renderChannelSvg(accs); });
   circle.appendChild(document.createElementNS('http://www.w3.org/2000/svg','title')).textContent=`${a.program}
 ${a.channel_quadrant}
 Dataset relevance: ${a.dataset_relevance_score}
@@ -581,13 +599,107 @@ External signal: ${a.external_ecosystem_signal}`;
  if(current){ selectedAccelProgram=current.program; renderProfile(current); }
  else el('accProfile').innerHTML='<div class="small">No accelerator after filters.</div>';
 }
+function externalLink(url,label){
+ if(!url) return '';
+ const u=String(url).trim();
+ if(!u || u==='#') return '';
+ return `<a class="link-chip" href="${safe(u)}" target="_blank" rel="noopener">${safe(label)}</a>`;
+}
+function portfolioSortScore(s){
+ let score=0;
+ if(s.actionability_bucket==='Priority review') score+=80;
+ if(s.actionability_bucket==='Needs enrichment') score+=45;
+ if(s.actionability_bucket==='Validate maturity') score+=35;
+ if(s.mobility_candidate) score+=30;
+ if(s.mobility_confidence==='Direct mobility signal') score+=20;
+ score+=Math.min(25,num(s.startup_signal_score)/4);
+ score+=Math.min(10,num(s.data_confidence_score)/12);
+ return score;
+}
+function startupBadges(s){
+ const out=[];
+ out.push(badge(s.actionability_bucket, s.actionability_bucket==='Priority review'?'green':s.actionability_bucket==='Needs enrichment'?'amber':s.actionability_bucket==='Validate maturity'?'red':'blue'));
+ if(s.mobility_candidate) out.push(badge(s.mobility_confidence||'Mobility candidate', s.mobility_confidence==='Direct mobility signal'?'green':'amber'));
+ out.push(confidenceBadge(s.data_confidence_score));
+ return out.join(' ');
+}
+function renderStartupProfileCard(s){
+ if(!s) return '<div class="portfolio-empty">Select a startup in the portfolio sample to view the company card.</div>';
+ const location=[s.city,s.country].filter(Boolean).join(', ') || 'n/a';
+ const founder=s.founder||'n/a';
+ const vertical=(s.verticals||[]).join(', ') || s.vertical || 'n/a';
+ const mobility=s.mobility_candidate ? (s.mobility_reason || s.mobility_confidence || 'Mobility candidate') : 'No mobility signal in this file';
+ const desc=s.description||'No description available in the current file.';
+ const website=externalLink(s.website,'Website');
+ const founderLink=externalLink(s.founder_profile,'Founder LinkedIn');
+ const links=(website||founderLink)?`<div class="portfolio-links">${website}${founderLink}</div>`:'<div class="small">No external links available in this file.</div>';
+ return `<div class="startup-profile-card">
+  <div class="startup-title">${safe(s.startup)}</div>
+  ${startupBadges(s)}
+  <div class="startup-desc">${safe(desc)}</div>
+  <div class="startup-mini-grid">
+    <div class="startup-mini-cell"><div class="l">Location</div><div class="v">${safe(location)}</div></div>
+    <div class="startup-mini-cell"><div class="l">Founder</div><div class="v">${safe(founder)}</div></div>
+    <div class="startup-mini-cell"><div class="l">Founded</div><div class="v">${safe(s.year_founded||'n/a')}</div></div>
+    <div class="startup-mini-cell"><div class="l">Employees</div><div class="v">${safe(s.employees||'n/a')}</div></div>
+    <div class="startup-mini-cell"><div class="l">Vertical</div><div class="v">${safe(vertical)}</div></div>
+    <div class="startup-mini-cell"><div class="l">Maturity</div><div class="v">${safe(s.maturity_bucket||'n/a')}</div></div>
+  </div>
+  <p class="compact-note"><strong>Mobility read:</strong> ${safe(mobility)}</p>
+  <p class="compact-note"><strong>Next action:</strong> ${safe(startupNextAction(s))}</p>
+  ${links}
+ </div>`;
+}
+function renderPortfolioSample(a){
+ const allRows=filteredStartups().filter(s=>s.program===a.program);
+ const rows=allRows.slice().sort((x,y)=>portfolioSortScore(y)-portfolioSortScore(x));
+ if(!rows.length){
+   selectedChannelStartup='';
+   return `<div class="profile-section"><h3>Portfolio sample</h3><div class="portfolio-empty">No startup rows for this accelerator under the current filters.</div></div>`;
+ }
+ if(!rows.some(s=>s.startup===selectedChannelStartup)) selectedChannelStartup=rows[0].startup;
+ const visible=rows.slice(0,10);
+ const selected=rows.find(s=>s.startup===selectedChannelStartup) || rows[0];
+ const list=visible.map(s=>{
+   const links=[externalLink(s.website,'Website'),externalLink(s.founder_profile,'LinkedIn')].filter(Boolean).join('');
+   const loc=[s.country,s.city].filter(Boolean).join(' / ');
+   const meta=[loc, s.primary_vertical||s.vertical, s.maturity_bucket, s.actionability_bucket].filter(Boolean).join(' · ');
+   return `<div class="portfolio-item ${s.startup===selectedChannelStartup?'active':''}" data-startup="${safe(s.startup)}">
+    <div class="portfolio-name">${safe(s.startup)}</div>
+    <div class="portfolio-meta">${safe(meta)}</div>
+    ${links?`<div class="portfolio-links">${links}</div>`:''}
+   </div>`;
+ }).join('');
+ const more=rows.length>visible.length?`<div class="detail-note">Showing first ${visible.length} of ${rows.length} rows. Use filters or the Targeting tab for the full list.</div>`:'';
+ return `<div class="profile-section">
+   <h3>Portfolio sample</h3>
+   <p class="compact-note">This connects the channel to the startups visible in the current filtered view. Click a startup to inspect its card.</p>
+   <div class="portfolio-list" id="channelPortfolioList">${list}</div>
+   ${more}
+   <div id="channelStartupCard">${renderStartupProfileCard(selected)}</div>
+ </div>`;
+}
+function bindPortfolioSample(a){
+ const box=el('accProfile');
+ const list=box.querySelector('#channelPortfolioList');
+ if(!list) return;
+ Array.from(list.querySelectorAll('.portfolio-item')).forEach(node=>{
+   node.addEventListener('click',()=>{
+     selectedChannelStartup=node.dataset.startup;
+     renderProfile(a);
+   });
+ });
+}
 function renderProfile(a){
  const evidenceCls=evidenceClass(a.evidence_badge);
+ const portfolioHtml=renderPortfolioSample(a);
  el('accProfile').innerHTML=`<div class="profile-title">${safe(a.program)}</div>
  ${badge(a.channel_quadrant,a.channel_quadrant==='Strategic channel'?'green':a.channel_quadrant==='Hidden dataset channel'?'amber':a.channel_quadrant==='Brand/reference channel'?'purple':'blue')} ${badge(a.evidence_badge,evidenceCls)} ${badge(a.recommended_use,'blue')}
  <div class="profile-grid"><div class="profile-cell"><div class="v">${fmt(a.dataset_startups)}</div><div class="l">Startups in file</div></div><div class="profile-cell"><div class="v">${fmt(a.startup_country_count)}</div><div class="l">Startup countries</div></div><div class="profile-cell"><div class="v">${a.dataset_relevance_score}</div><div class="l">Appears in file</div></div><div class="profile-cell"><div class="v">${a.external_ecosystem_signal}</div><div class="l">Public evidence</div></div></div>
  <div class="decision-strip"><div class="decision-card"><div class="k">Why it matters</div><div class="v">${safe(acceleratorWhy(a))}</div></div><div class="decision-card"><div class="k">Check before action</div><div class="v">${safe(acceleratorRisk(a))}</div></div><div class="decision-card"><div class="k">Suggested next action</div><div class="v">${safe(acceleratorNextAction(a))}</div></div></div>
- <div class="profile-section"><p><strong>Top vertical:</strong> ${safe(a.top_vertical||'n/a')} (${pct(a.top_vertical_share||0)})</p><p><strong>Pattern in this file:</strong> ${safe(a.dataset_archetype||'n/a')}</p><p><strong>Model:</strong> ${safe(a.model||'Not yet researched')}</p><p><strong>Funding terms:</strong> ${safe(a.funding_terms||'Not yet researched')}</p><p><strong>External scale:</strong> ${safe(a.external_scale||'Not yet researched')}</p><p><strong>Mobility candidates in file:</strong> ${fmt(a.mobility_candidate_count)} (${pct(a.mobility_share||0)})</p><p class="small">Source: ${a.source_url?`<a href="${safe(a.source_url)}" target="_blank">open source</a>`:'Dataset only. Research required.'}</p></div>`;
+ <div class="profile-section"><p><strong>Top vertical:</strong> ${safe(a.top_vertical||'n/a')} (${pct(a.top_vertical_share||0)})</p><p><strong>Pattern in this file:</strong> ${safe(a.dataset_archetype||'n/a')}</p><p><strong>Model:</strong> ${safe(a.model||'Not yet researched')}</p><p><strong>Funding terms:</strong> ${safe(a.funding_terms||'Not yet researched')}</p><p><strong>External scale:</strong> ${safe(a.external_scale||'Not yet researched')}</p><p><strong>Mobility candidates in file:</strong> ${fmt(a.mobility_candidate_count)} (${pct(a.mobility_share||0)})</p><p class="small">Source: ${a.source_url?`<a href="${safe(a.source_url)}" target="_blank">open source</a>`:'Dataset only. Research required.'}</p></div>
+ ${portfolioHtml}`;
+ bindPortfolioSample(a);
 }
 
 function renderAccTable(accs){
@@ -633,7 +745,8 @@ function renderMaturity(rows){
    ${badge(preferred.actionability_bucket,preferred.actionability_bucket==='Priority review'?'green':preferred.actionability_bucket==='Needs enrichment'?'amber':preferred.actionability_bucket==='Validate maturity'?'red':'blue')} ${badge(preferred.maturity_bucket,'blue')} ${confidenceBadge(preferred.data_confidence_score)}
    <div class="detail-grid"><div class="detail-kpi"><div class="v">${fmt(preferred.age_at_acceleration)}</div><div class="l">Years old at acceleration</div></div><div class="detail-kpi"><div class="v">${fmt(preferred.employees)}</div><div class="l">Employees</div></div><div class="detail-kpi"><div class="v">${fmt(preferred.founder_signal_score)}</div><div class="l">Founder background signals</div></div><div class="detail-kpi"><div class="v">${fmt(preferred.data_confidence_score)}</div><div class="l">Data confidence</div></div></div>
    <div class="decision-strip"><div class="decision-card"><div class="k">Why it matters</div><div class="v">${safe(actionExplanation(preferred))}</div></div><div class="decision-card"><div class="k">Check before action</div><div class="v">${preferred.actionability_bucket==='Validate maturity'?'Stage or team size may not fit the usual accelerator pattern.':'This is not an investment score. It only explains why the row needs review.'}</div></div><div class="decision-card"><div class="k">Suggested next action</div><div class="v">${safe(startupNextAction(preferred))}</div></div></div>
-   <p class="compact-note"><strong>Accelerator:</strong> ${safe(preferred.program||'n/a')} · <strong>Location:</strong> ${safe(preferred.country||'Unknown')} / ${safe(preferred.city||'Unknown')}</p>`;
+   <p class="compact-note"><strong>Accelerator:</strong> ${safe(preferred.program||'n/a')} · <strong>Location:</strong> ${safe(preferred.country||'Unknown')} / ${safe(preferred.city||'Unknown')}</p>
+   <div class="profile-section"><h3>Startup profile</h3>${renderStartupProfileCard(preferred)}</div>`;
  }
  else el('maturityDetail').innerHTML='<div class="small">No startup available after filters.</div>';
  Array.from(svg.querySelectorAll('circle.dot')).forEach(node=>{ if(node.dataset.startup===selectedMaturityStartup) node.classList.add('selected'); });
